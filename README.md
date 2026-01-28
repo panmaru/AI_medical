@@ -145,9 +145,8 @@ npm run dev
 
 | 角色   | 用户名 | 密码         | 权限范围                     |
 |--------|--------|--------------|------------------------------|
-| 管理员 | admin  | Admin@2024   | 全部功能（17个权限）         |
-| 医生   | doctor | Doctor@2024  | 患者管理 + AI问诊（8个权限） |
-| 普通用户 | user  | User@2024    | AI问诊（4个权限）            |
+| 管理员 | admin  | admin2026   | 全部功能（17个权限）         |
+| 医生   | doctor | doctor2026  | 患者管理 + AI问诊（8个权限） |
 
 ---
 
@@ -288,12 +287,12 @@ GET  /diagnosis/detail    - 诊断详情
 ### Q1: 登录失败，提示"密码错误"？
 **A**: 
 1. 确认已执行 `init.sql` 初始化数据库
-2. 使用新密码：`Admin@2024`（admin账号）
+2. 使用新密码：`admin2026`（admin账号）
 3. 检查用户状态是否被禁用
 
 ### Q2: 提示"权限不足"？
 **A**: 
-1. 使用管理员账号登录（admin/Admin@2024）
+1. 使用管理员账号登录（admin/admin2026）
 2. 检查权限数据是否正确初始化
 3. 确认路由守卫配置正确
 
@@ -324,7 +323,7 @@ GET  /diagnosis/detail    - 诊断详情
 ### Q7: 忘记管理员密码怎么办？
 **A**: 
 ```sql
--- 重置admin密码为 Admin@2024
+-- 重置admin密码为 admin2026
 UPDATE sys_user 
 SET password = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy' 
 WHERE username = 'admin';
@@ -366,7 +365,7 @@ WHERE username = 'admin';
 **强密码要求**：
 - 长度：8-20位
 - 必须包含：大写字母、小写字母、数字、特殊字符 (@$!%*?&)
-- 示例：`Admin@2024` ✅
+- 示例：`admin2026` ✅
 
 ### 权限配置
 

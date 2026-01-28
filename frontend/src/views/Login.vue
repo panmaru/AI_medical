@@ -43,12 +43,12 @@
             登录
           </el-button>
         </el-form-item>
-      </el-form>
 
-      <div class="login-tips">
-        <p>默认账号：admin / admin123</p>
-        <p>测试医生：doctor / doctor123</p>
-      </div>
+        <div class="register-link">
+          <span>还没有账号？</span>
+          <el-link type="primary" @click="goToRegister">立即注册</el-link>
+        </div>
+      </el-form>
     </div>
   </div>
 </template>
@@ -95,6 +95,10 @@ const handleLogin = async () => {
     loading.value = false
   }
 }
+
+const goToRegister = () => {
+  router.push('/register')
+}
 </script>
 
 <style scoped>
@@ -130,14 +134,14 @@ const handleLogin = async () => {
   margin-top: 30px;
 }
 
-.login-tips {
-  margin-top: 20px;
+.register-link {
+  margin-top: 15px;
   text-align: center;
   font-size: 14px;
-  color: #999;
+  color: #666;
 }
 
-.login-tips p {
-  margin: 5px 0;
+.register-link .el-link {
+  margin-left: 5px;
 }
 </style>

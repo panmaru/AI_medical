@@ -43,15 +43,21 @@ public class DiagnosisController {
      */
     @PostMapping("/chat")
     public Result<String> chat(@RequestBody Map<String, String> params) {
-        String message = params.get("message");
-        String sessionId = params.get("sessionId");
+        try {
+            String message = params.get("message");
+            String sessionId = params.get("sessionId");
 
-        if (message == null || message.isEmpty()) {
-            return Result.error("消息不能为空");
+            if (message == null || message.isEmpty()) {
+                return Result.error("消息不能为空");
+            }
+
+            // 调用AI服务
+            String response = sparkAiService.chat(message, sessionId);
+            return Result.success(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("AI处理失败: " + e.getMessage());
         }
-
-        String response = sparkAiService.chat(message, sessionId);
-        return Result.success(response);
     }
 
     /**

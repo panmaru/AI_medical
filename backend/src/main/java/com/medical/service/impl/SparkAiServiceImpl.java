@@ -1,9 +1,10 @@
 package com.medical.service.impl;
 
 import cn.hutool.core.util.IdUtil;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
+import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.alibaba.fastjson2.JSON;
-import com.medical.common.Result;
 import com.medical.dto.AiDiagnosisDTO;
 import com.medical.entity.DiagnosisRecord;
 import com.medical.entity.Patient;
@@ -15,19 +16,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
- * 讯飞星火AI服务实现类
+ * 智谱AI服务实现类 - 使用GLM-4
  *
  * @author AI Medical Team
  */
@@ -36,22 +29,17 @@ import java.util.*;
 @RequiredArgsConstructor
 public class SparkAiServiceImpl implements SparkAiService {
 
-    @Value("${spark.api.app-id}")
-    private String appId;
+    @Value("${zhipu.api.key}")
+    private String zhipuApiKey;
 
-    @Value("${spark.api.api-key}")
-    private String apiKey;
+    @Value("${zhipu.api.model}")
+    private String model;
 
-    @Value("${spark.api.api-secret}")
-    private String apiSecret;
-
-    @Value("${spark.api.url}")
+    @Value("${zhipu.api.url}")
     private String apiUrl;
 
     private final DiagnosisRecordMapper diagnosisRecordMapper;
     private final PatientMapper patientMapper;
-
-    private final WebClient.Builder webClientBuilder = WebClient.builder();
 
     @Override
     public Map<String, Object> aiDiagnosis(AiDiagnosisDTO dto) {
@@ -65,8 +53,8 @@ public class SparkAiServiceImpl implements SparkAiService {
             // 构建AI诊断提示词
             String prompt = buildDiagnosisPrompt(patient, dto);
 
-            // 调用讯飞星火API
-            String aiResponse = callSparkApi(prompt);
+            // 调用智谱AI API
+            String aiResponse = callZhipuApi(prompt);
 
             // 解析AI响应
             Map<String, Object> diagnosisResult = parseAiResponse(aiResponse);
@@ -78,8 +66,8 @@ public class SparkAiServiceImpl implements SparkAiService {
             record.setPatientName(patient.getName());
             record.setChiefComplaint(dto.getChiefComplaint());
             record.setPresentIllness(dto.getPresentIllness());
-            record.setSymptoms(JSON.toJSONString(dto.getSymptoms()));
-            record.setAiDiagnosis(JSON.toJSONString(diagnosisResult));
+            record.setSymptoms(JSONUtil.toJsonStr(dto.getSymptoms()));
+            record.setAiDiagnosis(JSONUtil.toJsonStr(diagnosisResult));
             record.setAiSuggestion((String) diagnosisResult.get("suggestion"));
             record.setDiagnosisType(0);
             record.setStatus(0);
@@ -103,12 +91,12 @@ public class SparkAiServiceImpl implements SparkAiService {
             // 构建对话提示词
             String prompt = buildChatPrompt(message);
 
-            // 调用讯飞星火API
-            return callSparkApi(prompt);
+            // 调用智谱AI API
+            return callZhipuApi(prompt);
 
         } catch (Exception e) {
             log.error("AI对话失败", e);
-            return "抱歉，我暂时无法回答您的问题，请稍后再试。";
+            return "抱歉，我暂时无法回答您的问题。错误：" + e.getMessage();
         }
     }
 
@@ -157,17 +145,6 @@ public class SparkAiServiceImpl implements SparkAiService {
         prompt.append("4. 治疗建议\n");
         prompt.append("5. 注意事项\n");
         prompt.append("6. 是否需要就医（是/否，如果需要，说明紧急程度）\n\n");
-        prompt.append("请以JSON格式回复，格式如下：\n");
-        prompt.append("{\n");
-        prompt.append("  \"diagnosis\": [\"疾病1\", \"疾病2\"],\n");
-        prompt.append("  \"basis\": \"诊断依据\",\n");
-        prompt.append("  \"examinations\": [\"检查1\", \"检查2\"],\n");
-        prompt.append("  \"treatment\": \"治疗建议\",\n");
-        prompt.append("  \"precautions\": \"注意事项\",\n");
-        prompt.append("  \"needDoctor\": true,\n");
-        prompt.append("  \"urgency\": \"紧急程度\",\n");
-        prompt.append("  \"suggestion\": \"综合建议\"\n");
-        prompt.append("}");
 
         return prompt.toString();
     }
@@ -182,66 +159,85 @@ public class SparkAiServiceImpl implements SparkAiService {
     }
 
     /**
-     * 调用讯飞星火API
+     * 调用智谱AI API
      */
-    private String callSparkApi(String prompt) throws Exception {
-        // 构建请求参数
-        Map<String, Object> params = new HashMap<>();
-        params.put("app_id", appId);
-        params.put("domain", "general");
+    private String callZhipuApi(String prompt) {
+        try {
+            log.info("调用智谱AI API，问题：{}", prompt);
 
-        Map<String, Object> message = new HashMap<>();
-        message.put("role", "user");
-        message.put("content", prompt);
+            // 构建请求参数
+            Map<String, Object> params = new HashMap<>();
+            params.put("model", model);
 
-        List<Map<String, Object>> messages = new ArrayList<>();
-        messages.add(message);
-        params.put("messages", messages);
+            List<Map<String, String>> messages = new ArrayList<>();
+            Map<String, String> msg = new HashMap<>();
+            msg.put("role", "user");
+            msg.put("content", prompt);
+            messages.add(msg);
 
-        // 计算鉴权URL
-        String authUrl = getAuthUrl(apiUrl);
-        log.info("请求讯飞星火API: {}", authUrl);
+            params.put("messages", messages);
 
-        // 发送请求
-        WebClient webClient = webClientBuilder.build();
-        String response = webClient.post()
-                .uri(authUrl)
-                .bodyValue(JSON.toJSONString(params))
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
+            log.info("智谱AI请求参数：{}", JSONUtil.toJsonStr(params));
 
-        log.info("讯飞星火API响应: {}", response);
-        return response;
+            // 发送HTTP POST请求
+            HttpResponse response = HttpRequest.post(apiUrl)
+                    .header("Authorization", "Bearer " + zhipuApiKey)
+                    .header("Content-Type", "application/json")
+                    .body(JSONUtil.toJsonStr(params))
+                    .timeout(60000)  // 60秒超时
+                    .execute();
+
+            String responseBody = response.body();
+            log.info("智谱AI响应：{}", responseBody);
+
+            // 解析响应
+            return parseZhipuResponse(responseBody);
+
+        } catch (Exception e) {
+            log.error("调用智谱AI失败", e);
+            throw new RuntimeException("API调用失败: " + e.getMessage());
+        }
     }
 
     /**
-     * 计算鉴权URL
+     * 解析智谱AI响应
      */
-    private String getAuthUrl(String url) throws Exception {
-        // 解析原始URL
-        java.net.URL urlObj = new java.net.URL(url);
-        String host = urlObj.getHost();
-        String path = urlObj.getPath();
+    private String parseZhipuResponse(String responseBody) {
+        try {
+            JSONObject response = JSONUtil.parseObj(responseBody);
 
-        // 生成日期和签名
-        String date = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US).format(new Date());
-        String signatureOrigin = "host: " + host + "\ndate: " + date + "\nGET " + path + " HTTP/1.1";
+            // 检查是否有错误
+            if (response.containsKey("error")) {
+                JSONObject error = response.getJSONObject("error");
+                String message = error.getStr("message");
+                log.error("智谱AI返回错误: {}", message);
+                throw new RuntimeException("智谱AI错误: " + message);
+            }
 
-        Mac mac = Mac.getInstance("hmacsha256");
-        SecretKeySpec secretKeySpec = new SecretKeySpec(apiSecret.getBytes(StandardCharsets.UTF_8), "hmacsha256");
-        mac.init(secretKeySpec);
-        byte[] signatureBytes = mac.doFinal(signatureOrigin.getBytes(StandardCharsets.UTF_8));
-        String signature = Base64.getEncoder().encodeToString(signatureBytes);
+            // 获取响应内容 - 使用Hutool的工具方法
+            if (response.containsKey("choices")) {
+                cn.hutool.json.JSONArray choices = response.getJSONArray("choices");
+                if (choices != null && !choices.isEmpty()) {
+                    JSONObject choice = choices.getJSONObject(0);
+                    if (choice != null && choice.containsKey("message")) {
+                        JSONObject msg = choice.getJSONObject("message");
+                        if (msg != null && msg.containsKey("content")) {
+                            String content = msg.getStr("content");
+                            if (content != null && !content.isEmpty()) {
+                                return content;
+                            }
+                        }
+                    }
+                }
+            }
 
-        // 构建 authorization
-        String authorizationOrigin = "api_key=\"" + apiKey + "\", algorithm=\"hmac-sha256\", headers=\"host date request-line\", signature=\"" + signature + "\"";
-        String authorization = Base64.getEncoder().encodeToString(authorizationOrigin.getBytes(StandardCharsets.UTF_8));
+            log.warn("无法解析智谱AI响应，原始响应：{}", responseBody);
+            return "抱歉，AI回复解析失败。";
 
-        // 构建最终URL
-        return url + "?authorization=" + URLEncoder.encode(authorization, "UTF-8") +
-                "&date=" + URLEncoder.encode(date, "UTF-8") +
-                "&host=" + URLEncoder.encode(host, "UTF-8");
+        } catch (Exception e) {
+            log.error("解析智谱AI响应失败", e);
+            throw new RuntimeException("响应解析失败: " + e.getMessage());
+        }
     }
 
     /**
@@ -249,34 +245,27 @@ public class SparkAiServiceImpl implements SparkAiService {
      */
     private Map<String, Object> parseAiResponse(String aiResponse) {
         try {
-            // 这里需要根据实际讯飞星火API的返回格式进行解析
-            // 以下是示例代码，实际使用时需要根据API文档调整
-            Map<String, Object> response = JSON.parseObject(aiResponse, Map.class);
-
-            // 如果返回的是嵌套结构，需要提取实际内容
-            Object content = response.get("content");
-            if (content != null) {
-                String contentStr = content.toString();
-                // 尝试解析JSON格式的响应
-                if (contentStr.startsWith("{")) {
-                    return JSON.parseObject(contentStr, Map.class);
-                }
+            // 尝试解析为JSON
+            if (aiResponse.startsWith("{")) {
+                Map<String, Object> json = JSONUtil.parseObj(aiResponse);
+                return json;
             }
 
-            // 如果无法解析为JSON，返回文本格式
+            // 如果不是JSON，包装成文本格式
             Map<String, Object> result = new HashMap<>();
-            result.put("suggestion", content != null ? content.toString() : aiResponse);
-            result.put("diagnosis", Collections.emptyList());
+            result.put("suggestion", aiResponse);
+            result.put("diagnosis", new ArrayList<>());
             result.put("needDoctor", true);
-
+            result.put("urgency", "一般");
             return result;
 
         } catch (Exception e) {
-            log.error("解析AI响应失败", e);
+            // 解析失败，返回文本格式
             Map<String, Object> result = new HashMap<>();
             result.put("suggestion", aiResponse);
-            result.put("diagnosis", Collections.emptyList());
+            result.put("diagnosis", new ArrayList<>());
             result.put("needDoctor", true);
+            result.put("urgency", "一般");
             return result;
         }
     }
@@ -287,5 +276,4 @@ public class SparkAiServiceImpl implements SparkAiService {
     private String generateRecordNo() {
         return "DR" + System.currentTimeMillis() + IdUtil.randomUUID().substring(0, 4).toUpperCase();
     }
-
 }

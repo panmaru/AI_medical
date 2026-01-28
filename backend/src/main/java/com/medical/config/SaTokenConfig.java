@@ -25,6 +25,7 @@ public class SaTokenConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/auth/login",
                         "/auth/register",
+                        "/diagnosis/chat",  // AI问诊接口不需要登录（仅用于测试）
                         "/ws/**",
                         "/error",
                         "/swagger-resources/**",

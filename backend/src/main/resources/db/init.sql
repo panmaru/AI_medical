@@ -255,7 +255,8 @@ INSERT INTO sys_permission (permission_code, permission_name, resource_type, men
 ('system:user-management', '用户管理', 'menu', 'menu', '/user-management', NULL, 0, 1, 'User', '/user-management', 'views/UserManagement.vue', 1, 1, '用户管理菜单'),
 ('system:patient-management', '患者管理', 'menu', 'menu', '/patient', NULL, 0, 2, 'UserFilled', '/patient', 'views/Patient.vue', 1, 1, '患者管理菜单'),
 ('system:diagnosis', 'AI问诊', 'menu', 'menu', '/diagnosis', NULL, 0, 3, 'ChatLineRound', '/diagnosis', 'views/Diagnosis.vue', 1, 1, 'AI问诊菜单'),
-('system:role-management', '角色管理', 'menu', 'menu', '/role-management', NULL, 0, 4, 'Lock', '/role-management', 'views/RoleManagement.vue', 1, 1, '角色管理菜单');
+('system:role-management', '角色管理', 'menu', 'menu', '/role-management', NULL, 0, 4, 'Lock', '/role-management', 'views/RoleManagement.vue', 1, 1, '角色管理菜单'),
+('system:settings', '个人设置', 'menu', 'menu', '/settings', NULL, 0, 10, 'Setting', '/settings', 'views/Settings.vue', 1, 1, '个人设置菜单');
 
 -- Button Permissions
 INSERT INTO sys_permission (permission_code, permission_name, resource_type, menu_type, parent_id, sort_order, visible, status, description) VALUES
@@ -350,7 +351,8 @@ WHERE permission_code IN (
     'patient:button:add', 'patient:button:edit',
     'diagnosis:ai', 'diagnosis:record', 'diagnosis:detail',
     'system:patient-management', 'system:diagnosis',
-    'user:change-password'
+    'user:change-password',
+    'system:settings'
 );
 
 -- User Role (id=3) - Diagnosis and Password Change Only
@@ -360,7 +362,8 @@ WHERE permission_code IN (
     'system:dashboard',
     'diagnosis:ai', 'diagnosis:record', 'diagnosis:detail',
     'system:diagnosis',
-    'user:change-password'
+    'user:change-password',
+    'system:settings'
 );
 
 SET FOREIGN_KEY_CHECKS = 1;

@@ -305,8 +305,7 @@ INSERT INTO sys_permission (permission_code, permission_name, resource_type, url
 ('knowledge:detail', '知识库详情', 'api', '/knowledge/*', 'GET', 0, 45, 1, 1, '查看知识库详情'),
 ('knowledge:create', '创建知识', 'api', '/knowledge', 'POST', 0, 46, 1, 1, '创建新知识'),
 ('knowledge:update', '更新知识', 'api', '/knowledge', 'PUT', 0, 47, 1, 1, '更新知识信息'),
-('knowledge:delete-api', '删除知识', 'api', '/knowledge/*', 'DELETE', 0, 48, 1, 1, '删除知识'),
-('knowledge:audit-api', '审核知识', 'api', '/knowledge/audit/*', 'PUT', 0, 49, 1, 1, '审核知识'),
+('knowledge:delete', '删除知识', 'api', '/knowledge/*', 'DELETE', 0, 48, 1, 1, '删除知识'),
 
 -- System Management APIs
 ('system:config', '系统配置', 'api', '/system/config', 'GET', 0, 51, 1, 1, '查看系统配置'),

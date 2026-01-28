@@ -51,3 +51,13 @@ export const getMenu = () => {
     method: 'get'
   })
 }
+
+/**
+ * 获取当前用户权限列表
+ */
+export const getUserPermissions = () => {
+  return request({
+    url: '/auth/user/permissions',
+    method: 'get'
+  })
+}

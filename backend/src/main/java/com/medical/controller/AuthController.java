@@ -117,4 +117,14 @@ public class AuthController {
         return Result.success(menus);
     }
 
+    /**
+     * 获取当前用户的权限列表
+     */
+    @GetMapping("/user/permissions")
+    public Result<List<String>> getUserPermissions() {
+        Long userId = StpUtil.getLoginIdAsLong();
+        List<String> permissions = permissionService.getUserAllPermissions(userId);
+        return Result.success(permissions);
+    }
+
 }

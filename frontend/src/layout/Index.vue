@@ -75,9 +75,9 @@ const userStore = useUserStore()
 const menuRoutes = computed(() => {
   const routes = router.getRoutes()
   return routes
-    .filter(r => r.path.startsWith('/') && r.meta && r.meta.title && r.path !== '/login')
+    .filter(r => r.path.startsWith('/') && r.meta && r.meta.title && !r.meta.hidden && r.path !== '/login' && r.path !== '/register')
     .sort((a, b) => {
-      const order = ['/dashboard', '/diagnosis', '/patient', '/diagnosis-record', '/knowledge', '/statistics', '/settings']
+      const order = ['/dashboard', '/diagnosis', '/patient', '/diagnosis-record', '/knowledge', '/statistics', '/settings', '/user-management']
       return order.indexOf(a.path) - order.indexOf(b.path)
     })
 })

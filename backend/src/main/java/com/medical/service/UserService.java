@@ -116,4 +116,17 @@ public interface UserService extends IService<User> {
      */
     boolean updateUserStatus(Long userId, Integer status);
 
+    /**
+     * 更新当前用户个人信息
+     *
+     * @param realName 真实姓名
+     * @param phone 手机号
+     * @param email 邮箱
+     * @param title 职称
+     * @param specialty 专长
+     * @param avatar 头像URL
+     * @return 是否成功
+     */
+    boolean updateProfile(String realName, String phone, String email, String title, String specialty, String avatar);
+
 }

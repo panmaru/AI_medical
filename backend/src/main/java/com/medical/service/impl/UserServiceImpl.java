@@ -207,4 +207,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return this.updateById(user);
     }
 
+    @Override
+    public boolean updateProfile(String realName, String phone, String email, String title, String specialty, String avatar) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        User user = this.getById(userId);
+        
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        user.setRealName(realName);
+        user.setPhone(phone);
+        user.setEmail(email);
+        user.setTitle(title);
+        user.setSpecialty(specialty);
+        user.setAvatar(avatar);
+
+        return this.updateById(user);
+    }
+
 }

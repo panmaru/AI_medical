@@ -9,6 +9,7 @@ import com.medical.common.Result;
 import com.medical.dto.ChangePasswordDTO;
 import com.medical.dto.ResetPasswordDTO;
 import com.medical.dto.UserDTO;
+import com.medical.dto.ProfileDTO;
 import com.medical.dto.UserStatusDTO;
 import com.medical.entity.User;
 import com.medical.service.UserService;
@@ -155,6 +156,23 @@ public class UserController {
         StpUtil.logout();
 
         return Result.success("修改密码成功，请重新登录", null);
+    }
+
+    /**
+     * 更新当前用户个人信息
+     */
+    @PutMapping("/profile")
+    public Result<Void> updateProfile(@RequestBody ProfileDTO profileDTO) {
+        userService.updateProfile(
+            profileDTO.getRealName(),
+            profileDTO.getPhone(),
+            profileDTO.getEmail(),
+            profileDTO.getTitle(),
+            profileDTO.getSpecialty(),
+            profileDTO.getAvatar()
+        );
+
+        return Result.success("更新个人信息成功", null);
     }
 
     /**

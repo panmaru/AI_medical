@@ -72,6 +72,12 @@ const dynamicRoutes = [
         name: 'ChangePassword',
         component: () => import('@/views/ChangePassword.vue'),
         meta: { title: '修改密码', hidden: true }
+      },
+      {
+        path: 'settings',
+        name: 'Settings',
+        component: () => import('@/views/Settings.vue'),
+        meta: { title: '个人设置', icon: 'Setting' }
       }
     ]
   }

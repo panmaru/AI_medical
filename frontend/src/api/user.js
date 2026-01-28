@@ -86,3 +86,14 @@ export const updateUserStatus = (data) => {
     data
   })
 }
+
+/**
+ * 更新个人信息
+ */
+export const updateProfile = (data) => {
+  return request({
+    url: '/user/profile',
+    method: 'put',
+    data
+  })
+}

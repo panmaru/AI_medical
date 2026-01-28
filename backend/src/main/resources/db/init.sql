@@ -251,6 +251,7 @@ INSERT INTO medical_knowledge (title, disease_name, category, symptoms, etiology
 
 -- Menu Permissions
 INSERT INTO sys_permission (permission_code, permission_name, resource_type, menu_type, url, method, parent_id, sort_order, icon, path, component, visible, status, description) VALUES
+('system:dashboard', '工作台', 'menu', 'menu', '/dashboard', NULL, 0, 0, 'Odometer', '/dashboard', 'views/Dashboard.vue', 1, 1, '工作台菜单'),
 ('system:user-management', '用户管理', 'menu', 'menu', '/user-management', NULL, 0, 1, 'User', '/user-management', 'views/UserManagement.vue', 1, 1, '用户管理菜单'),
 ('system:patient-management', '患者管理', 'menu', 'menu', '/patient', NULL, 0, 2, 'UserFilled', '/patient', 'views/Patient.vue', 1, 1, '患者管理菜单'),
 ('system:diagnosis', 'AI问诊', 'menu', 'menu', '/diagnosis', NULL, 0, 3, 'ChatLineRound', '/diagnosis', 'views/Diagnosis.vue', 1, 1, 'AI问诊菜单'),
@@ -344,6 +345,7 @@ SELECT 1, id FROM sys_permission;
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT 2, id FROM sys_permission
 WHERE permission_code IN (
+    'system:dashboard',
     'patient:list', 'patient:detail', 'patient:create', 'patient:update',
     'patient:button:add', 'patient:button:edit',
     'diagnosis:ai', 'diagnosis:record', 'diagnosis:detail',
@@ -355,6 +357,7 @@ WHERE permission_code IN (
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT 3, id FROM sys_permission
 WHERE permission_code IN (
+    'system:dashboard',
     'diagnosis:ai', 'diagnosis:record', 'diagnosis:detail',
     'system:diagnosis',
     'user:change-password'

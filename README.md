@@ -240,7 +240,7 @@ AI_medical/
 - ✅ 密码强度验证器（弱/中/强）
 - ✅ 密码强度可视化组件
 - ✅ BCrypt加密存储
-- ✅ 密码复杂度要求（8-20位，大小写+数字+特殊字符）
+- ✅ 密码复杂度要求（6-20位，必须包含字母和数字）
 
 ---
 
@@ -325,7 +325,7 @@ GET  /diagnosis/detail    - 诊断详情
 ```sql
 -- 重置admin密码为 admin2026
 UPDATE sys_user 
-SET password = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy' 
+SET password = '$2a$10$H9zPs/FPjF/CbmNdvPPxZOEjf5bBH7TIlc0/AuiXdjkKjbs0uzTS6' 
 WHERE username = 'admin';
 ```
 
@@ -362,9 +362,9 @@ WHERE username = 'admin';
 
 ### 密码强度规则
 
-**强密码要求**：
-- 长度：8-20位
-- 必须包含：大写字母、小写字母、数字、特殊字符 (@$!%*?&)
+**密码要求**：
+- 长度：6-20位
+- 必须包含：字母和数字
 - 示例：`admin2026` ✅
 
 ### 权限配置

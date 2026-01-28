@@ -30,10 +30,9 @@ public class KnowledgeController {
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String diseaseName,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) Integer auditStatus) {
+            @RequestParam(required = false) String category) {
         Page<MedicalKnowledge> page = new Page<>(current, size);
-        IPage<MedicalKnowledge> result = knowledgeService.getKnowledgePage(page, diseaseName, category, auditStatus);
+        IPage<MedicalKnowledge> result = knowledgeService.getKnowledgePage(page, diseaseName, category, null);
         return Result.success(result);
     }
 
@@ -58,7 +57,7 @@ public class KnowledgeController {
         Long userId = StpUtil.getLoginIdAsLong();
         knowledge.setCreateBy(userId);
         knowledge.setSource(1); // 手动录入
-        knowledge.setAuditStatus(0); // 默认待审核
+        knowledge.setAuditStatus(1); // 直接设置为已审核，去掉审核流程
 
         boolean success = knowledgeService.save(knowledge);
         if (success) {
@@ -93,23 +92,6 @@ public class KnowledgeController {
             return Result.success("删除成功");
         } else {
             return Result.error("删除失败");
-        }
-    }
-
-    /**
-     * 审核知识
-     */
-    @SaCheckPermission("knowledge:audit")
-    @PutMapping("/audit/{id}")
-    public Result<String> auditKnowledge(
-            @PathVariable Long id,
-            @RequestParam Integer auditStatus) {
-        Long auditorId = StpUtil.getLoginIdAsLong();
-        boolean success = knowledgeService.auditKnowledge(id, auditStatus, auditorId);
-        if (success) {
-            return Result.success("审核成功");
-        } else {
-            return Result.error("审核失败");
         }
     }
 

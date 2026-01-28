@@ -4,7 +4,7 @@
       <template #header>
         <div class="card-header">
           <span>医疗知识库管理</span>
-          <el-button type="primary" size="small" @click="handleAdd">
+          <el-button v-permission="'knowledge:create'" type="primary" size="small" @click="handleAdd">
             <el-icon><Plus /></el-icon>
             新增知识
           </el-button>
@@ -26,12 +26,6 @@
             <el-option label="泌尿系统" value="泌尿系统" />
           </el-select>
         </el-form-item>
-        <el-form-item label="审核状态">
-          <el-select v-model="searchForm.auditStatus" placeholder="请选择状态" clearable>
-            <el-option label="待审核" :value="0" />
-            <el-option label="已审核" :value="1" />
-          </el-select>
-        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
           <el-button @click="handleReset">重置</el-button>
@@ -44,27 +38,12 @@
         <el-table-column prop="diseaseName" label="疾病名称" width="150" />
         <el-table-column prop="category" label="分类" width="120" />
         <el-table-column prop="symptoms" label="症状" show-overflow-tooltip />
-        <el-table-column prop="auditStatus" label="审核状态" width="100">
-          <template #default="{ row }">
-            <el-tag v-if="row.auditStatus === 0" type="warning">待审核</el-tag>
-            <el-tag v-else type="success">已审核</el-tag>
-          </template>
-        </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="180" />
-        <el-table-column label="操作" width="280" fixed="right">
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="info" link size="small" @click="handleView(row)">查看</el-button>
-            <el-button type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button
-              v-if="row.auditStatus === 0"
-              type="success"
-              link
-              size="small"
-              @click="handleAudit(row)"
-            >
-              审核
-            </el-button>
-            <el-button type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
+            <el-button v-permission="'knowledge:update'" type="primary" link size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'knowledge:delete'" type="danger" link size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -196,30 +175,8 @@
         <el-descriptions-item label="注意事项">{{ currentKnowledge.precautions }}</el-descriptions-item>
         <el-descriptions-item label="参考文献">{{ currentKnowledge.references }}</el-descriptions-item>
         <el-descriptions-item label="标签">{{ currentKnowledge.tags }}</el-descriptions-item>
-        <el-descriptions-item label="审核状态">
-          <el-tag v-if="currentKnowledge.auditStatus === 0" type="warning">待审核</el-tag>
-          <el-tag v-else type="success">已审核</el-tag>
-        </el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ currentKnowledge.createTime }}</el-descriptions-item>
       </el-descriptions>
-    </el-dialog>
-
-    <!-- 审核对话框 -->
-    <el-dialog v-model="auditDialogVisible" title="审核知识" width="400px">
-      <el-form label-width="80px">
-        <el-form-item label="审核结果">
-          <el-radio-group v-model="auditForm.auditStatus">
-            <el-radio :value="1">通过</el-radio>
-            <el-radio :value="0">拒绝</el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="auditDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleAuditSubmit" :loading="auditLoading">
-          确定
-        </el-button>
-      </template>
     </el-dialog>
   </div>
 </template>
@@ -232,8 +189,7 @@ import {
   getKnowledgePage,
   createKnowledge,
   updateKnowledge,
-  deleteKnowledge,
-  auditKnowledge
+  deleteKnowledge
 } from '@/api/knowledge'
 
 const loading = ref(false)
@@ -241,8 +197,7 @@ const tableData = ref([])
 
 const searchForm = reactive({
   diseaseName: '',
-  category: '',
-  auditStatus: null
+  category: ''
 })
 
 const page = reactive({
@@ -254,10 +209,8 @@ const page = reactive({
 // 对话框相关
 const dialogVisible = ref(false)
 const viewDialogVisible = ref(false)
-const auditDialogVisible = ref(false)
 const dialogTitle = ref('')
 const submitLoading = ref(false)
-const auditLoading = ref(false)
 const formRef = ref(null)
 
 const form = reactive({
@@ -278,11 +231,6 @@ const form = reactive({
 
 const currentKnowledge = ref({})
 
-const auditForm = reactive({
-  id: null,
-  auditStatus: 1
-})
-
 const rules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
   diseaseName: [{ required: true, message: '请输入疾病名称', trigger: 'blur' }],
@@ -298,8 +246,7 @@ const loadData = async () => {
       current: page.current,
       size: page.size,
       diseaseName: searchForm.diseaseName || undefined,
-      category: searchForm.category || undefined,
-      auditStatus: searchForm.auditStatus
+      category: searchForm.category || undefined
     }
     const res = await getKnowledgePage(params)
     tableData.value = res.data.records
@@ -321,7 +268,6 @@ const handleSearch = () => {
 const handleReset = () => {
   searchForm.diseaseName = ''
   searchForm.category = ''
-  searchForm.auditStatus = null
   page.current = 1
   loadData()
 }
@@ -394,28 +340,6 @@ const handleDelete = (row) => {
       ElMessage.error(error.message || '删除失败')
     }
   })
-}
-
-// 审核
-const handleAudit = (row) => {
-  auditForm.id = row.id
-  auditForm.auditStatus = 1
-  auditDialogVisible.value = true
-}
-
-// 提交审核
-const handleAuditSubmit = async () => {
-  auditLoading.value = true
-  try {
-    await auditKnowledge(auditForm.id, auditForm.auditStatus)
-    ElMessage.success('审核成功')
-    auditDialogVisible.value = false
-    loadData()
-  } catch (error) {
-    ElMessage.error(error.message || '审核失败')
-  } finally {
-    auditLoading.value = false
-  }
 }
 
 // 对话框关闭

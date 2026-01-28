@@ -356,7 +356,7 @@ WHERE u.deleted = 0;
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT 1, id FROM sys_permission;
 
--- Doctor Role (id=2) - Patient and Diagnosis Permissions
+-- Doctor Role (id=2) - Patient, Diagnosis and Knowledge Permissions
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT 2, id FROM sys_permission
 WHERE permission_code IN (
@@ -364,6 +364,7 @@ WHERE permission_code IN (
     'system:dashboard',
     'system:patient-management',
     'system:diagnosis',
+    'system:knowledge',
     'system:settings',
     -- 患者管理API权限
     'patient:list',
@@ -379,22 +380,30 @@ WHERE permission_code IN (
     'diagnosis:ai',
     'diagnosis:record',
     'diagnosis:detail',
+    -- 知识库权限（医生可以查看和新增）
+    'knowledge:list',
+    'knowledge:detail',
+    'knowledge:create',
     -- 用户个人权限
     'user:change-password'
 );
 
--- User Role (id=3) - Diagnosis and Password Change Only
+-- User Role (id=3) - Diagnosis, Knowledge View and Password Change Only
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT 3, id FROM sys_permission
 WHERE permission_code IN (
     -- 菜单权限
     'system:dashboard',
     'system:diagnosis',
+    'system:knowledge',
     'system:settings',
     -- AI问诊权限
     'diagnosis:ai',
     'diagnosis:record',
     'diagnosis:detail',
+    -- 知识库权限（患者只能查看）
+    'knowledge:list',
+    'knowledge:detail',
     -- 用户个人权限
     'user:change-password'
 );

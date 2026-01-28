@@ -1,0 +1,40 @@
+package com.medical.service;
+
+import com.medical.dto.AiDiagnosisDTO;
+import com.medical.entity.DiagnosisRecord;
+
+import java.util.Map;
+
+/**
+ * 讯飞星火AI服务接口
+ *
+ * @author AI Medical Team
+ */
+public interface SparkAiService {
+
+    /**
+     * AI诊断
+     *
+     * @param dto 诊断请求信息
+     * @return 诊断结果
+     */
+    Map<String, Object> aiDiagnosis(AiDiagnosisDTO dto);
+
+    /**
+     * AI对话问诊
+     *
+     * @param message 用户消息
+     * @param sessionId 会话ID
+     * @return AI回复
+     */
+    String chat(String message, String sessionId);
+
+    /**
+     * 保存诊断记录
+     *
+     * @param record 诊断记录
+     * @return 保存的记录
+     */
+    DiagnosisRecord saveDiagnosisRecord(DiagnosisRecord record);
+
+}

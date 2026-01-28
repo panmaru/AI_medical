@@ -17,7 +17,7 @@ public class RegisterDTO {
 
     @NotBlank(message = "密码不能为空")
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,20}$",
-            message = "密码必须8-20位，包含大小写字母、数字和特殊字符")
+            message = "密码必须6-20位，至少包含字母和数字")
     private String password;
 
     @NotBlank(message = "确认密码不能为空")

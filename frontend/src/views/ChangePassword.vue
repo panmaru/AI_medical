@@ -27,7 +27,7 @@
           <el-input
             v-model="formData.newPassword"
             type="password"
-            placeholder="请输入新密码（8-20位，包含大小写字母、数字和特殊字符）"
+            placeholder="请输入新密码（6-20位，至少包含字母和数字）"
             show-password
           />
           <PasswordStrength :password="formData.newPassword" v-if="formData.newPassword" />
@@ -59,10 +59,8 @@
       >
         <template #default>
           <ul style="margin: 0; padding-left: 20px">
-            <li>密码长度为8-20位</li>
-            <li>必须包含大小写字母</li>
-            <li>必须包含数字</li>
-            <li>必须包含特殊字符（@$!%*?&）</li>
+            <li>密码长度为6-20位</li>
+            <li>至少包含字母和数字</li>
           </ul>
         </template>
       </el-alert>
@@ -100,8 +98,8 @@ const formRules = {
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
     {
-      pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,20}$/,
-      message: '密码必须8-20位，包含大小写字母、数字和特殊字符',
+      pattern: /^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,20}$/,
+      message: '密码必须6-20位，至少包含字母和数字',
       trigger: 'blur'
     }
   ],

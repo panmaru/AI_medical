@@ -84,19 +84,13 @@ public class PasswordValidator {
         }
     }
 
-    /**
-     * 验证密码是否符合要求
-     * 
-     * @param password 密码
-     * @return 是否符合要求
-     */
     public static boolean isValid(String password) {
-        if (password == null || password.length() < 8 || password.length() > 20) {
+        if (password == null || password.length() < 6 || password.length() > 20) {
             return false;
         }
 
-        // 必须包含大小写字母、数字和特殊字符
-        return password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,20}$");
+        // 必须包含字母和数字
+        return password.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,20}$");
     }
 
     /**

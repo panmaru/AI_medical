@@ -19,7 +19,7 @@ public class UserDTO {
     private String username;
 
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,20}$",
-            message = "密码必须8-20位，包含大小写字母、数字和特殊字符", groups = {Create.class})
+            message = "密码必须6-20位，至少包含字母和数字", groups = {Create.class})
     private String password;
 
     @NotBlank(message = "真实姓名不能为空")

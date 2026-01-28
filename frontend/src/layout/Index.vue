@@ -73,12 +73,23 @@ const userStore = useUserStore()
 
 // 菜单路由
 const menuRoutes = computed(() => {
-  const routes = router.getRoutes()
-  return routes
-    .filter(r => r.path.startsWith('/') && r.meta && r.meta.title && !r.meta.hidden && r.path !== '/login' && r.path !== '/register')
+  // 直接从路由配置中获取子路由
+  const mainRoute = router.getRoutes().find(r => r.path === '/')
+  if (!mainRoute || !mainRoute.children) {
+    return []
+  }
+
+  return mainRoute.children
+    .filter(r => r.meta && r.meta.title && !r.meta.hidden)
+    .map(r => ({
+      ...r,
+      path: `/${r.path}` // 确保路径是绝对路径
+    }))
     .sort((a, b) => {
-      const order = ['/dashboard', '/diagnosis', '/patient', '/diagnosis-record', '/knowledge', '/statistics', '/settings', '/user-management']
-      return order.indexOf(a.path) - order.indexOf(b.path)
+      const order = ['dashboard', 'diagnosis', 'patient', 'diagnosis-record', 'knowledge', 'statistics', 'settings', 'user-management']
+      const pathA = a.path.replace('/', '')
+      const pathB = b.path.replace('/', '')
+      return order.indexOf(pathA) - order.indexOf(pathB)
     })
 })
 

@@ -57,7 +57,7 @@ public class UserController {
     public Result<Void> createUser(@RequestBody UserDTO userDTO) {
         // 验证密码强度
         if (!PasswordValidator.isValid(userDTO.getPassword())) {
-            return Result.error("密码必须8-20位，包含大小写字母、数字和特殊字符");
+            return Result.error("密码必须6-20位，至少包含字母和数字");
         }
 
         userService.createUser(
@@ -118,7 +118,7 @@ public class UserController {
 
         // 验证密码强度
         if (!PasswordValidator.isValid(resetPasswordDTO.getNewPassword())) {
-            return Result.error("密码必须8-20位，包含大小写字母、数字和特殊字符");
+            return Result.error("密码必须6-20位，至少包含字母和数字");
         }
 
         userService.resetPassword(
@@ -143,7 +143,7 @@ public class UserController {
 
         // 验证密码强度
         if (!PasswordValidator.isValid(changePasswordDTO.getNewPassword())) {
-            return Result.error("密码必须8-20位，包含大小写字母、数字和特殊字符");
+            return Result.error("密码必须6-20位，至少包含字母和数字");
         }
 
         userService.changePassword(

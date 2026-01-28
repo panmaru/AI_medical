@@ -151,7 +151,7 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
         menuVO.setPermissionCode(permission.getPermissionCode());
         menuVO.setPermissionName(permission.getPermissionName());
         menuVO.setMenuType(permission.getMenuType() != null ? permission.getMenuType() : permission.getResourceType());
-        menuVO.setPath(permission.getUrl());
+        menuVO.setPath(permission.getPath());
         menuVO.setComponent(permission.getComponent());
         menuVO.setIcon(permission.getIcon());
         menuVO.setSortOrder(permission.getSortOrder());

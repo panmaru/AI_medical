@@ -80,6 +80,11 @@ public class Permission {
     private String component;
 
     /**
+     * 路由路径
+     */
+    private String path;
+
+    /**
      * 权限描述
      */
     private String description;

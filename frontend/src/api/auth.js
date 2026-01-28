@@ -30,3 +30,14 @@ export const getUserInfo = () => {
     method: 'get'
   })
 }
+
+/**
+ * 用户注册
+ */
+export const register = (data) => {
+  return request({
+    url: '/auth/register',
+    method: 'post',
+    data
+  })
+}

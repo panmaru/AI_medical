@@ -12,20 +12,20 @@ spring:
     username: root
     password: ${DB_PASSWORD:123456}
 
-  # Redis配置（暂时禁用，使用内存存储）
-  # data:
-  #   redis:
-  #     host: localhost
-  #     port: 6379
-  #     password:
-  #     database: 0
-  #     timeout: 3000
-  #     lettuce:
-  #       pool:
-  #         max-active: 8
-  #         max-wait: -1
-  #         max-idle: 8
-  #         min-idle: 0
+  # Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 3000
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1
+          max-idle: 8
+          min-idle: 0
 
   # Jackson配置
   jackson:
@@ -57,6 +57,8 @@ sa-token:
   is-log: false
   is-print: false
   jwt-secret-key: ${SA_TOKEN_JWT_SECRET:kP8fD2hL5mN9qR3tV6wY4zB7xC0vF1sG4hJ2kM5nP8q}
+  # 启用JWT模式（无状态，不需要Redis或数据库存储）
+  # 注意：不使用 token-prefix，前端直接发送 token 值即可
 
 # 讯飞星火配置（暂时不用）
 spark:
@@ -73,10 +75,19 @@ zhipu:
     model: glm-4
     url: https://open.bigmodel.cn/api/paas/v4/chat/completions
 
+# 文件上传配置
+file:
+  upload-path: uploads
+  upload-url-prefix: /uploads
+  max-size: 5MB
+
 # 应用配置
 app:
   cors:
     allowed-origins:
+    - http://localhost:5173
+    - http://localhost:3000
+    - http://localhost:8080
       - http://localhost:5173
       - http://localhost:3000
       - http://localhost:8080

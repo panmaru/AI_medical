@@ -10,7 +10,18 @@
             </div>
           </template>
           <div class="user-profile">
-            <el-avatar :size="100" :src="userStore.userInfo.avatar" />
+            <div class="avatar-wrapper">
+              <el-avatar :size="120" :src="userStore.userInfo.avatar" />
+              <el-upload
+                class="avatar-upload"
+                action="#"
+                :show-file-list="false"
+                :before-upload="beforeAvatarUpload"
+                :http-request="uploadAvatar"
+              >
+                <el-icon class="avatar-upload-icon"><Camera /></el-icon>
+              </el-upload>
+            </div>
             <h3>{{ userStore.userInfo.realName }}</h3>
             <p>{{ userStore.userInfo.title || '暂无职称' }}</p>
             <el-descriptions :column="1" class="user-info" border>
@@ -45,8 +56,20 @@
             <el-form-item label="专长" prop="specialty">
               <el-input v-model="profileForm.specialty" type="textarea" :rows="3" placeholder="请输入专长" />
             </el-form-item>
-            <el-form-item label="头像URL" prop="avatar">
-              <el-input v-model="profileForm.avatar" placeholder="请输入头像URL" />
+            <el-form-item label="头像" prop="avatar">
+              <div class="avatar-upload-wrapper">
+                <el-upload
+                  class="avatar-uploader"
+                  action="#"
+                  :show-file-list="false"
+                  :before-upload="beforeAvatarUpload"
+                  :http-request="uploadAvatarForEdit"
+                >
+                  <img v-if="profileForm.avatar" :src="profileForm.avatar" class="avatar-preview" />
+                  <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
+                </el-upload>
+                <div class="avatar-tip">支持上传jpg、png格式的图片，文件大小不超过5MB</div>
+              </div>
             </el-form-item>
           </el-form>
           <template #footer>
@@ -64,6 +87,7 @@ import { ref, reactive } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 import { updateProfile } from '@/api/user'
+import request from '@/utils/request'
 
 const userStore = useUserStore()
 const editDialogVisible = ref(false)
@@ -125,6 +149,75 @@ const handleUpdateProfile = async () => {
     }
   })
 }
+
+// 上传前验证
+const beforeAvatarUpload = (file) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt5M = file.size / 1024 / 1024 < 5
+
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件!')
+    return false
+  }
+  if (!isLt5M) {
+    ElMessage.error('图片大小不能超过5MB!')
+    return false
+  }
+  return true
+}
+
+// 上传头像（直接更新）
+const uploadAvatar = async (options) => {
+  const { file } = options
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
+    const res = await request({
+      url: '/file/upload/avatar',
+      method: 'post',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    // 更新用户头像
+    await updateProfile({
+      ...profileForm,
+      avatar: res.data.url
+    })
+
+    ElMessage.success('头像上传成功')
+    // 刷新用户信息
+    await userStore.getInfo()
+  } catch (error) {
+    ElMessage.error(error.message || '头像上传失败')
+  }
+}
+
+// 上传头像（编辑对话框）
+const uploadAvatarForEdit = async (options) => {
+  const { file } = options
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
+    const res = await request({
+      url: '/file/upload/avatar',
+      method: 'post',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    profileForm.avatar = res.data.url
+    ElMessage.success('头像上传成功')
+  } catch (error) {
+    ElMessage.error(error.message || '头像上传失败')
+  }
+}
 </script>
 
 <style scoped>
@@ -157,5 +250,84 @@ const handleUpdateProfile = async () => {
 .user-info {
   margin-top: 30px;
   text-align: left;
+}
+
+/* 头像上传 */
+.avatar-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.avatar-upload {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #409EFF;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.avatar-upload:hover {
+  background: #66b1ff;
+}
+
+.avatar-upload-icon {
+  color: #fff;
+  font-size: 16px;
+}
+
+/* 编辑对话框头像上传 */
+.avatar-upload-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-uploader {
+  text-align: center;
+}
+
+.avatar-uploader :deep(.el-upload) {
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-uploader :deep(.el-upload:hover) {
+  border-color: #409EFF;
+}
+
+.avatar-preview {
+  width: 120px;
+  height: 120px;
+  display: block;
+  object-fit: cover;
+}
+
+.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+}
+
+.avatar-tip {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #999;
 }
 </style>

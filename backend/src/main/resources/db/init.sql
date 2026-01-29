@@ -260,6 +260,7 @@ INSERT INTO sys_permission (permission_code, permission_name, resource_type, men
 ('system:diagnosis-record', '诊断记录', 'menu', 'menu', '/diagnosis-record', NULL, 0, 3, 'Document', '/diagnosis-record', 'views/DiagnosisRecord.vue', 1, 1, '诊断记录菜单'),
 ('system:skin-analysis', '皮肤图片分析', 'menu', 'menu', '/skin-analysis', NULL, 0, 4, 'Picture', '/skin-analysis', 'views/SkinAnalysis.vue', 1, 1, '皮肤图片分析菜单'),
 ('system:knowledge', '知识库管理', 'menu', 'menu', '/knowledge', NULL, 0, 5, 'Reading', '/knowledge', 'views/Knowledge.vue', 1, 1, '知识库管理菜单'),
+('system:medical-knowledge', '医疗知识库', 'menu', 'menu', '/medical-knowledge', NULL, 0, 5, 'Notebook', '/medical-knowledge', 'views/MedicalKnowledge.vue', 1, 1, '医疗知识库菜单'),
 ('system:user-management', '用户管理', 'menu', 'menu', '/user-management', NULL, 0, 6, 'User', '/user-management', 'views/UserManagement.vue', 1, 1, '用户管理菜单'),
 ('system:role-management', '角色管理', 'menu', 'menu', '/role-management', NULL, 0, 7, 'Lock', '/role-management', 'views/RoleManagement.vue', 1, 1, '角色管理菜单'),
 ('system:settings', '个人设置', 'menu', 'menu', '/settings', NULL, 0, 10, 'Setting', '/settings', 'views/Settings.vue', 1, 1, '个人设置菜单'),
@@ -408,7 +409,7 @@ WHERE permission_code IN (
     'system:dashboard',
     'system:diagnosis',
     'system:skin-analysis',
-    'system:knowledge',
+    'system:medical-knowledge',
     'system:settings',
     'system:patient-profile',
     -- AI问诊权限

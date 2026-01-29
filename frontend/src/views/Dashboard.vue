@@ -3,7 +3,7 @@
     <!-- 统计卡片 -->
     <el-row :gutter="20" class="stats-row">
       <el-col :span="6">
-        <el-card class="stat-card">
+        <el-card v-loading="statsLoading" class="stat-card">
           <div class="stat-content">
             <div class="stat-icon" style="background-color: #409EFF">
               <el-icon :size="30"><User /></el-icon>
@@ -17,7 +17,7 @@
       </el-col>
 
       <el-col :span="6">
-        <el-card class="stat-card">
+        <el-card v-loading="statsLoading" class="stat-card">
           <div class="stat-content">
             <div class="stat-icon" style="background-color: #67C23A">
               <el-icon :size="30"><DocumentChecked /></el-icon>
@@ -31,7 +31,7 @@
       </el-col>
 
       <el-col :span="6">
-        <el-card class="stat-card">
+        <el-card v-loading="statsLoading" class="stat-card">
           <div class="stat-content">
             <div class="stat-icon" style="background-color: #E6A23C">
               <el-icon :size="30"><ChatLineRound /></el-icon>
@@ -45,7 +45,7 @@
       </el-col>
 
       <el-col :span="6">
-        <el-card class="stat-card">
+        <el-card v-loading="statsLoading" class="stat-card">
           <div class="stat-content">
             <div class="stat-icon" style="background-color: #F56C6C">
               <el-icon :size="30"><TrendCharts /></el-icon>
@@ -62,10 +62,13 @@
     <!-- 图表区域 -->
     <el-row :gutter="20" class="charts-row">
       <el-col :span="16">
-        <el-card>
+        <el-card v-loading="chartsLoading">
           <template #header>
             <div class="card-header">
               <span>问诊趋势</span>
+              <el-button type="primary" link size="small" :icon="Refresh" @click="refreshTrendChart">
+                刷新
+              </el-button>
             </div>
           </template>
           <div ref="trendChartRef" style="height: 350px"></div>
@@ -73,7 +76,7 @@
       </el-col>
 
       <el-col :span="8">
-        <el-card>
+        <el-card v-loading="chartsLoading">
           <template #header>
             <div class="card-header">
               <span>疾病类型分布</span>
@@ -87,13 +90,18 @@
     <!-- 最近问诊记录 -->
     <el-row :gutter="20" class="recent-row">
       <el-col :span="24">
-        <el-card>
+        <el-card v-loading="recordsLoading">
           <template #header>
             <div class="card-header">
               <span>最近问诊记录</span>
-              <el-button type="primary" size="small" @click="$router.push('/diagnosis-record')">
-                查看全部
-              </el-button>
+              <div>
+                <el-button type="primary" link size="small" :icon="Refresh" @click="refreshRecentRecords">
+                  刷新
+                </el-button>
+                <el-button type="primary" size="small" @click="$router.push('/diagnosis-record')">
+                  查看全部
+                </el-button>
+              </div>
             </div>
           </template>
           <el-table :data="recentRecords" stripe>
@@ -123,118 +131,241 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import * as echarts from 'echarts'
+import { ElMessage } from 'element-plus'
+import { User, DocumentChecked, ChatLineRound, TrendCharts, Refresh } from '@element-plus/icons-vue'
+import {
+  getStatistics,
+  getTrendData,
+  getDiseaseDistribution,
+  getRecentRecords
+} from '@/api/dashboard'
+
+const router = useRouter()
+
+// 加载状态
+const statsLoading = ref(false)
+const chartsLoading = ref(false)
+const recordsLoading = ref(false)
 
 // 统计数据
 const stats = ref({
-  patientCount: 1234,
-  diagnosisCount: 56,
-  aiDiagnosisCount: 42,
-  accuracy: 95.8
+  patientCount: 0,
+  diagnosisCount: 0,
+  aiDiagnosisCount: 0,
+  accuracy: 0
 })
 
 // 最近记录
-const recentRecords = ref([
-  {
-    recordNo: 'DR202412010001',
-    patientName: '张三',
-    chiefComplaint: '头痛、发热3天',
-    status: 0,
-    createTime: '2024-12-01 14:30:25'
-  },
-  {
-    recordNo: 'DR202412010002',
-    patientName: '李四',
-    chiefComplaint: '咳嗽、咽痛',
-    status: 1,
-    createTime: '2024-12-01 13:20:15'
-  },
-  {
-    recordNo: 'DR202412010003',
-    patientName: '王五',
-    chiefComplaint: '腹痛、恶心',
-    status: 2,
-    createTime: '2024-12-01 11:45:30'
-  }
-])
+const recentRecords = ref([])
 
 // 图表引用
 const trendChartRef = ref(null)
 const pieChartRef = ref(null)
+let trendChart = null
+let pieChart = null
+
+// 格式化时间
+const formatDateTime = (dateTime) => {
+  if (!dateTime) return ''
+  const date = new Date(dateTime)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
+// 获取统计数据
+const fetchStatistics = async () => {
+  try {
+    statsLoading.value = true
+    const res = await getStatistics()
+    if (res.code === 200) {
+      stats.value = {
+        patientCount: res.data.patientCount || 0,
+        diagnosisCount: res.data.todayDiagnosisCount || 0,
+        aiDiagnosisCount: res.data.aiDiagnosisCount || 0,
+        accuracy: res.data.accuracyRate ? parseFloat(res.data.accuracyRate).toFixed(1) : '0.0'
+      }
+    } else {
+      ElMessage.error(res.message || '获取统计数据失败')
+    }
+  } catch (error) {
+    console.error('获取统计数据失败:', error)
+    ElMessage.error('获取统计数据失败')
+  } finally {
+    statsLoading.value = false
+  }
+}
 
 // 初始化趋势图
-const initTrendChart = () => {
-  const chart = echarts.init(trendChartRef.value)
-  const option = {
-    tooltip: {
-      trigger: 'axis'
-    },
-    legend: {
-      data: ['问诊人数', 'AI诊断']
-    },
-    xAxis: {
-      type: 'category',
-      data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-    },
-    yAxis: {
-      type: 'value'
-    },
-    series: [
-      {
-        name: '问诊人数',
-        type: 'line',
-        data: [45, 52, 48, 55, 60, 42, 38],
-        smooth: true
-      },
-      {
-        name: 'AI诊断',
-        type: 'line',
-        data: [35, 42, 38, 45, 50, 32, 28],
-        smooth: true
+const initTrendChart = async () => {
+  try {
+    chartsLoading.value = true
+    const res = await getTrendData(7)
+
+    if (res.code === 200 && res.data) {
+      const data = res.data
+
+      if (!trendChart) {
+        trendChart = echarts.init(trendChartRef.value)
       }
-    ]
+
+      const option = {
+        tooltip: {
+          trigger: 'axis'
+        },
+        legend: {
+          data: ['问诊人数', 'AI诊断']
+        },
+        xAxis: {
+          type: 'category',
+          data: data.dates || []
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series: [
+          {
+            name: '问诊人数',
+            type: 'line',
+            data: data.diagnosisCounts || [],
+            smooth: true
+          },
+          {
+            name: 'AI诊断',
+            type: 'line',
+            data: data.aiDiagnosisCounts || [],
+            smooth: true
+          }
+        ]
+      }
+      trendChart.setOption(option)
+    } else {
+      ElMessage.error(res.message || '获取趋势数据失败')
+    }
+  } catch (error) {
+    console.error('获取趋势数据失败:', error)
+    ElMessage.error('获取趋势数据失败')
+  } finally {
+    chartsLoading.value = false
   }
-  chart.setOption(option)
+}
+
+// 刷新趋势图
+const refreshTrendChart = () => {
+  initTrendChart()
 }
 
 // 初始化饼图
-const initPieChart = () => {
-  const chart = echarts.init(pieChartRef.value)
-  const option = {
-    tooltip: {
-      trigger: 'item'
-    },
-    legend: {
-      orient: 'vertical',
-      left: 'left'
-    },
-    series: [
-      {
-        name: '疾病类型',
-        type: 'pie',
-        radius: '60%',
-        data: [
-          { value: 35, name: '呼吸系统' },
-          { value: 25, name: '消化系统' },
-          { value: 20, name: '心血管' },
-          { value: 12, name: '神经系统' },
-          { value: 8, name: '其他' }
+const initPieChart = async () => {
+  try {
+    chartsLoading.value = true
+    const res = await getDiseaseDistribution()
+
+    if (res.code === 200 && res.data) {
+      const data = res.data
+
+      if (!pieChart) {
+        pieChart = echarts.init(pieChartRef.value)
+      }
+
+      const option = {
+        tooltip: {
+          trigger: 'item'
+        },
+        legend: {
+          orient: 'vertical',
+          left: 'left'
+        },
+        series: [
+          {
+            name: '疾病类型',
+            type: 'pie',
+            radius: '60%',
+            data: data.map(item => ({
+              value: item.value,
+              name: item.name
+            }))
+          }
         ]
       }
-    ]
+      pieChart.setOption(option)
+    } else {
+      ElMessage.error(res.message || '获取疾病分布失败')
+    }
+  } catch (error) {
+    console.error('获取疾病分布失败:', error)
+    ElMessage.error('获取疾病分布失败')
+  } finally {
+    chartsLoading.value = false
   }
-  chart.setOption(option)
+}
+
+// 获取最近记录
+const fetchRecentRecords = async () => {
+  try {
+    recordsLoading.value = true
+    const res = await getRecentRecords(5)
+
+    if (res.code === 200 && res.data) {
+      recentRecords.value = res.data.map(record => ({
+        ...record,
+        createTime: formatDateTime(record.createTime)
+      }))
+    } else {
+      ElMessage.error(res.message || '获取最近记录失败')
+    }
+  } catch (error) {
+    console.error('获取最近记录失败:', error)
+    ElMessage.error('获取最近记录失败')
+  } finally {
+    recordsLoading.value = false
+  }
+}
+
+// 刷新最近记录
+const refreshRecentRecords = () => {
+  fetchRecentRecords()
 }
 
 // 查看详情
 const viewDetail = (row) => {
-  console.log('查看详情:', row)
+  router.push({
+    path: '/diagnosis-record',
+    query: { id: row.id }
+  })
+}
+
+// 窗口大小变化时重新渲染图表
+const handleResize = () => {
+  trendChart?.resize()
+  pieChart?.resize()
 }
 
 onMounted(() => {
+  // 获取所有数据
+  fetchStatistics()
   initTrendChart()
   initPieChart()
+  fetchRecentRecords()
+
+  // 监听窗口大小变化
+  window.addEventListener('resize', handleResize)
+})
+
+onBeforeUnmount(() => {
+  // 销毁图表实例
+  trendChart?.dispose()
+  pieChart?.dispose()
+
+  // 移除事件监听
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 

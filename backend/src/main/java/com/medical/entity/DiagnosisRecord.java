@@ -61,6 +61,11 @@ public class DiagnosisRecord {
     private String symptoms;
 
     /**
+     * 皮肤图片URL(JSON格式，存储多个图片URL)
+     */
+    private String imageUrls;
+
+    /**
      * AI诊断结果(JSON格式)
      */
     private String aiDiagnosis;

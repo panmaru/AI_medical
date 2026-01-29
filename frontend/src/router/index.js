@@ -56,6 +56,12 @@ const dynamicRoutes = [
         meta: { title: '诊断记录', icon: 'Document' }
       },
       {
+        path: 'skin-analysis',
+        name: 'SkinAnalysis',
+        component: () => import('@/views/SkinAnalysis.vue'),
+        meta: { title: '皮肤图片分析', icon: 'Picture' }
+      },
+      {
         path: 'knowledge',
         name: 'Knowledge',
         component: () => import('@/views/Knowledge.vue'),

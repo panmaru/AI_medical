@@ -37,4 +37,14 @@ public interface SparkAiService {
      */
     DiagnosisRecord saveDiagnosisRecord(DiagnosisRecord record);
 
+    /**
+     * AI皮肤图片分析
+     *
+     * @param patientId 患者ID
+     * @param imageUrls 图片URL列表
+     * @param description 患者描述（可选）
+     * @return 分析结果
+     */
+    Map<String, Object> analyzeSkinImage(Long patientId, java.util.List<String> imageUrls, String description);
+
 }

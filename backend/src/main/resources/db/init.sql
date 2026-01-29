@@ -90,6 +90,7 @@ CREATE TABLE diagnosis_record (
     chief_complaint TEXT,
     present_illness TEXT,
     symptoms TEXT,
+    image_urls TEXT COMMENT '皮肤图片URL(JSON格式，存储多个图片URL)',
     ai_diagnosis TEXT,
     ai_suggestion TEXT,
     doctor_diagnosis TEXT,
@@ -257,9 +258,10 @@ INSERT INTO sys_permission (permission_code, permission_name, resource_type, men
 ('system:patient-management', '患者管理', 'menu', 'menu', '/patient', NULL, 0, 1, 'UserFilled', '/patient', 'views/Patient.vue', 1, 1, '患者管理菜单'),
 ('system:diagnosis', 'AI问诊', 'menu', 'menu', '/diagnosis', NULL, 0, 2, 'ChatLineRound', '/diagnosis', 'views/Diagnosis.vue', 1, 1, 'AI问诊菜单'),
 ('system:diagnosis-record', '诊断记录', 'menu', 'menu', '/diagnosis-record', NULL, 0, 3, 'Document', '/diagnosis-record', 'views/DiagnosisRecord.vue', 1, 1, '诊断记录菜单'),
-('system:knowledge', '知识库管理', 'menu', 'menu', '/knowledge', NULL, 0, 4, 'Reading', '/knowledge', 'views/Knowledge.vue', 1, 1, '知识库管理菜单'),
-('system:user-management', '用户管理', 'menu', 'menu', '/user-management', NULL, 0, 5, 'User', '/user-management', 'views/UserManagement.vue', 1, 1, '用户管理菜单'),
-('system:role-management', '角色管理', 'menu', 'menu', '/role-management', NULL, 0, 6, 'Lock', '/role-management', 'views/RoleManagement.vue', 1, 1, '角色管理菜单'),
+('system:skin-analysis', '皮肤图片分析', 'menu', 'menu', '/skin-analysis', NULL, 0, 4, 'Picture', '/skin-analysis', 'views/SkinAnalysis.vue', 1, 1, '皮肤图片分析菜单'),
+('system:knowledge', '知识库管理', 'menu', 'menu', '/knowledge', NULL, 0, 5, 'Reading', '/knowledge', 'views/Knowledge.vue', 1, 1, '知识库管理菜单'),
+('system:user-management', '用户管理', 'menu', 'menu', '/user-management', NULL, 0, 6, 'User', '/user-management', 'views/UserManagement.vue', 1, 1, '用户管理菜单'),
+('system:role-management', '角色管理', 'menu', 'menu', '/role-management', NULL, 0, 7, 'Lock', '/role-management', 'views/RoleManagement.vue', 1, 1, '角色管理菜单'),
 ('system:settings', '个人设置', 'menu', 'menu', '/settings', NULL, 0, 10, 'Setting', '/settings', 'views/Settings.vue', 1, 1, '个人设置菜单'),
 ('system:patient-profile', '我的患者信息', 'menu', 'menu', '/patient-profile', NULL, 0, 11, 'UserFilled', '/patient-profile', 'views/PatientProfile.vue', 1, 1, '我的患者信息菜单');
 
@@ -299,28 +301,33 @@ INSERT INTO sys_permission (permission_code, permission_name, resource_type, url
 ('diagnosis:record', '诊断记录', 'api', '/diagnosis/page', 'GET', 0, 42, 1, 1, '查看诊断记录'),
 ('diagnosis:detail', '诊断详情', 'api', '/diagnosis/*', 'GET', 0, 43, 1, 1, '查看诊断详情'),
 
+-- Skin Analysis APIs
+('skin:analyze', '皮肤图片分析', 'api', '/skin-analysis/analyze', 'POST', 0, 44, 1, 1, '上传并分析皮肤图片'),
+('skin:upload', '上传图片', 'api', '/skin-analysis/upload', 'POST', 0, 45, 1, 1, '单独上传图片'),
+('skin:upload-batch', '批量上传图片', 'api', '/skin-analysis/upload/batch', 'POST', 0, 46, 1, 1, '批量上传图片'),
+
 -- Knowledge APIs
-('knowledge:list', '知识库列表', 'api', '/knowledge/page', 'GET', 0, 44, 1, 1, '查看知识库列表'),
-('knowledge:detail', '知识库详情', 'api', '/knowledge/*', 'GET', 0, 45, 1, 1, '查看知识库详情'),
-('knowledge:create', '创建知识', 'api', '/knowledge', 'POST', 0, 46, 1, 1, '创建新知识'),
-('knowledge:update', '更新知识', 'api', '/knowledge', 'PUT', 0, 47, 1, 1, '更新知识信息'),
-('knowledge:delete', '删除知识', 'api', '/knowledge/*', 'DELETE', 0, 48, 1, 1, '删除知识'),
+('knowledge:list', '知识库列表', 'api', '/knowledge/page', 'GET', 0, 50, 1, 1, '查看知识库列表'),
+('knowledge:detail', '知识库详情', 'api', '/knowledge/*', 'GET', 0, 51, 1, 1, '查看知识库详情'),
+('knowledge:create', '创建知识', 'api', '/knowledge', 'POST', 0, 52, 1, 1, '创建新知识'),
+('knowledge:update', '更新知识', 'api', '/knowledge', 'PUT', 0, 53, 1, 1, '更新知识信息'),
+('knowledge:delete', '删除知识', 'api', '/knowledge/*', 'DELETE', 0, 54, 1, 1, '删除知识'),
 
 -- System Management APIs
-('system:config', '系统配置', 'api', '/system/config', 'GET', 0, 51, 1, 1, '查看系统配置'),
-('system:log', '系统日志', 'api', '/system/log', 'GET', 0, 52, 1, 1, '查看系统日志'),
+('system:config', '系统配置', 'api', '/system/config', 'GET', 0, 60, 1, 1, '查看系统配置'),
+('system:log', '系统日志', 'api', '/system/log', 'GET', 0, 61, 1, 1, '查看系统日志'),
 
 -- Role Management APIs
-('role:list', '角色列表', 'api', '/role/page', 'GET', 0, 53, 1, 1, '查看角色列表'),
-('role:create', '创建角色', 'api', '/role/create', 'POST', 0, 54, 1, 1, '创建新角色'),
-('role:update', '更新角色', 'api', '/role/update', 'PUT', 0, 55, 1, 1, '更新角色信息'),
-('role:delete', '删除角色', 'api', '/role/delete/*', 'DELETE', 0, 56, 1, 1, '删除角色'),
-('role:detail', '角色详情', 'api', '/role/permissions/*', 'GET', 0, 57, 1, 1, '查看角色详情'),
-('role:assign-permissions', '分配权限', 'api', '/role/assign-permissions', 'POST', 0, 58, 1, 1, '为角色分配权限'),
+('role:list', '角色列表', 'api', '/role/page', 'GET', 0, 62, 1, 1, '查看角色列表'),
+('role:create', '创建角色', 'api', '/role/create', 'POST', 0, 63, 1, 1, '创建新角色'),
+('role:update', '更新角色', 'api', '/role/update', 'PUT', 0, 64, 1, 1, '更新角色信息'),
+('role:delete', '删除角色', 'api', '/role/delete/*', 'DELETE', 0, 65, 1, 1, '删除角色'),
+('role:detail', '角色详情', 'api', '/role/permissions/*', 'GET', 0, 66, 1, 1, '查看角色详情'),
+('role:assign-permissions', '分配权限', 'api', '/role/assign-permissions', 'POST', 0, 67, 1, 1, '为角色分配权限'),
 
 -- Permission Management APIs
-('permission:list', '权限列表', 'api', '/permission/list', 'GET', 0, 59, 1, 1, '查看所有权限'),
-('permission:tree', '权限树', 'api', '/permission/tree', 'GET', 0, 60, 1, 1, '获取权限树形结构');
+('permission:list', '权限列表', 'api', '/permission/list', 'GET', 0, 68, 1, 1, '查看所有权限'),
+('permission:tree', '权限树', 'api', '/permission/tree', 'GET', 0, 69, 1, 1, '获取权限树形结构');
 
 -- ================================================
 -- RBAC ROLE DATA
@@ -386,13 +393,14 @@ WHERE permission_code IN (
     'user:change-password'
 );
 
--- User Role (id=3) - Diagnosis, Knowledge View and Password Change Only
+-- User Role (id=3) - Patient User Only
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT 3, id FROM sys_permission
 WHERE permission_code IN (
     -- 菜单权限
     'system:dashboard',
     'system:diagnosis',
+    'system:skin-analysis',
     'system:knowledge',
     'system:settings',
     'system:patient-profile',
@@ -400,6 +408,10 @@ WHERE permission_code IN (
     'diagnosis:ai',
     'diagnosis:record',
     'diagnosis:detail',
+    -- 皮肤图片分析权限（仅患者可用）
+    'skin:analyze',
+    'skin:upload',
+    'skin:upload-batch',
     -- 知识库权限（患者只能查看）
     'knowledge:list',
     'knowledge:detail',

@@ -134,6 +134,13 @@
             placeholder="请输入治疗方案"
           />
         </el-form-item>
+        <el-form-item label="AI诊断准确性">
+          <el-radio-group v-model="confirmForm.matchRate">
+            <el-radio :label="100">准确（AI诊断与医生诊断一致）</el-radio>
+            <el-radio :label="70">基本准确（AI诊断部分正确）</el-radio>
+            <el-radio :label="0">不准确（AI诊断错误）</el-radio>
+          </el-radio-group>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="confirmDialogVisible = false">取消</el-button>
@@ -169,7 +176,8 @@ const currentRecord = ref({})
 const confirmForm = reactive({
   recordId: null,
   doctorDiagnosis: '',
-  treatmentPlan: ''
+  treatmentPlan: '',
+  matchRate: 100 // 默认为100（准确）
 })
 
 // 加载数据
@@ -253,6 +261,7 @@ const handleConfirm = (row) => {
   confirmForm.recordId = row.id
   confirmForm.doctorDiagnosis = ''
   confirmForm.treatmentPlan = ''
+  confirmForm.matchRate = 100 // 重置为默认值（准确）
   confirmDialogVisible.value = true
 }
 

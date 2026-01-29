@@ -478,8 +478,7 @@ WHERE permission_code IN (
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT 3, id FROM sys_permission
 WHERE permission_code IN (
-    -- 菜单权限
-    'system:dashboard',
+    -- 菜单权限（不包含dashboard）
     'system:diagnosis',
     'system:skin-analysis',
     'system:medical-knowledge',

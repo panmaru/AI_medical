@@ -137,8 +137,12 @@ public class DashboardServiceImpl implements DashboardService {
         wrapper.isNotNull(DiagnosisRecord::getAiDiagnosis);
         List<DiagnosisRecord> records = diagnosisRecordMapper.selectList(wrapper);
 
+        log.info("查询到 {} 条有AI诊断结果的记录", records.size());
+
         // 统计疾病分布
         Map<String, Integer> diseaseMap = new HashMap<>();
+        int successCount = 0;
+        int failCount = 0;
 
         for (DiagnosisRecord record : records) {
             String aiDiagnosisJson = record.getAiDiagnosis();
@@ -166,15 +170,44 @@ public class DashboardServiceImpl implements DashboardService {
                     else if (rootNode.has("name")) {
                         diseaseName = rootNode.get("name").asText();
                     }
+                    // 格式4: {"diagnosis": "xxx", ...}
+                    else if (rootNode.has("diagnosis")) {
+                        diseaseName = rootNode.get("diagnosis").asText();
+                    }
+                    // 格式5: {"result": "xxx", ...}
+                    else if (rootNode.has("result")) {
+                        diseaseName = rootNode.get("result").asText();
+                    }
+                    // 格式6: {"possibleDiseases": [{"name": "xxx", "confidence": 0.8}], ...}
+                    else if (rootNode.has("possibleDiseases")) {
+                        JsonNode possibleDiseases = rootNode.get("possibleDiseases");
+                        if (possibleDiseases.isArray() && possibleDiseases.size() > 0) {
+                            JsonNode firstDisease = possibleDiseases.get(0);
+                            if (firstDisease.has("name")) {
+                                diseaseName = firstDisease.get("name").asText();
+                            }
+                        }
+                    }
 
                     if (diseaseName != null && !diseaseName.isEmpty()) {
                         diseaseMap.put(diseaseName, diseaseMap.getOrDefault(diseaseName, 0) + 1);
+                        successCount++;
+                        log.debug("成功提取疾病: {} (记录ID: {})", diseaseName, record.getId());
+                    } else {
+                        failCount++;
+                        log.warn("无法从AI诊断JSON中提取疾病名称 (记录ID: {}): {}", 
+                                record.getId(), aiDiagnosisJson);
                     }
                 } catch (JsonProcessingException e) {
-                    log.warn("解析AI诊断结果失败: {}", aiDiagnosisJson, e);
+                    failCount++;
+                    log.error("解析AI诊断结果JSON失败 (记录ID: {}): {}", 
+                            record.getId(), aiDiagnosisJson, e);
                 }
             }
         }
+
+        log.info("疾病分布统计完成 - 成功: {}, 失败: {}, 识别到 {} 种疾病", 
+                successCount, failCount, diseaseMap.size());
 
         // 转换为VO列表并按数量降序排序
         List<DiseaseDistributionVO> result = diseaseMap.entrySet().stream()

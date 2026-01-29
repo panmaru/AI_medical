@@ -1,5 +1,6 @@
 package com.medical.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.medical.entity.Patient;
 import com.medical.mapper.PatientMapper;
@@ -13,5 +14,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class PatientServiceImpl extends ServiceImpl<PatientMapper, Patient> implements PatientService {
+
+    @Override
+    public Patient getByUserId(Long userId) {
+        LambdaQueryWrapper<Patient> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Patient::getUserId, userId);
+        return this.getOne(wrapper);
+    }
 
 }

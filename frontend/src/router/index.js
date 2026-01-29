@@ -84,6 +84,12 @@ const dynamicRoutes = [
         name: 'Settings',
         component: () => import('@/views/Settings.vue'),
         meta: { title: '个人设置', icon: 'Setting' }
+      },
+      {
+        path: 'patient-profile',
+        name: 'PatientProfile',
+        component: () => import('@/views/PatientProfile.vue'),
+        meta: { title: '我的患者信息', hidden: true }
       }
     ]
   }

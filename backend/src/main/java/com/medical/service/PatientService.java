@@ -10,4 +10,12 @@ import com.medical.entity.Patient;
  */
 public interface PatientService extends IService<Patient> {
 
+    /**
+     * 根据用户ID查询患者信息
+     *
+     * @param userId 用户ID
+     * @return 患者信息
+     */
+    Patient getByUserId(Long userId);
+
 }

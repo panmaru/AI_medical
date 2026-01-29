@@ -15,6 +15,8 @@
 -- ================================================
 
 -- Create Database
+DROP DATABASE IF EXISTS ai_medical;
+
 CREATE DATABASE IF NOT EXISTS ai_medical DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 USE ai_medical;
@@ -238,11 +240,7 @@ INSERT INTO sys_user (username, password, real_name, role, status, title, specia
 ('doctor', '$2a$10$efO8RdeQv4ZDxiZoad15S.hip3C2cPFl1nEvdJiL7WifU1z5NIyGu', 'Dr. Zhang', 1, 1, 'Attending Physician', 'Internal Medicine, Respiratory Medicine'),
 ('user', '$2a$10$rPEY0qSJvPYQHlzXhEJBxOvPLkAOFd1xNJ3nx9h1JvKROh/xZh10e', 'Test User', 2, 1, 'Regular User', NULL);
 
--- Insert Test Patients
-INSERT INTO patient (patient_no, name, gender, age, birthday, phone, address) VALUES
-('P20241201001', 'Zhang San', 1, 35, '1989-05-15', '13800138001', 'Beijing Chaoyang District'),
-('P20241201002', 'Li Si', 0, 28, '1996-08-20', '13800138002', 'Beijing Haidian District'),
-('P20241201003', 'Wang Wu', 1, 42, '1982-03-10', '13800138003', 'Beijing Xicheng District');
+-- Insert Test Patients\n-- Test data removed - no patient records in initial database
 
 -- Insert Test Medical Knowledge
 INSERT INTO medical_knowledge (title, disease_name, category, symptoms, etiology, diagnosis_methods, treatment, medication_advice, precautions, source, audit_status) VALUES
@@ -262,7 +260,8 @@ INSERT INTO sys_permission (permission_code, permission_name, resource_type, men
 ('system:knowledge', '知识库管理', 'menu', 'menu', '/knowledge', NULL, 0, 4, 'Reading', '/knowledge', 'views/Knowledge.vue', 1, 1, '知识库管理菜单'),
 ('system:user-management', '用户管理', 'menu', 'menu', '/user-management', NULL, 0, 5, 'User', '/user-management', 'views/UserManagement.vue', 1, 1, '用户管理菜单'),
 ('system:role-management', '角色管理', 'menu', 'menu', '/role-management', NULL, 0, 6, 'Lock', '/role-management', 'views/RoleManagement.vue', 1, 1, '角色管理菜单'),
-('system:settings', '个人设置', 'menu', 'menu', '/settings', NULL, 0, 10, 'Setting', '/settings', 'views/Settings.vue', 1, 1, '个人设置菜单');
+('system:settings', '个人设置', 'menu', 'menu', '/settings', NULL, 0, 10, 'Setting', '/settings', 'views/Settings.vue', 1, 1, '个人设置菜单'),
+('system:patient-profile', '我的患者信息', 'menu', 'menu', '/patient-profile', NULL, 0, 11, 'UserFilled', '/patient-profile', 'views/PatientProfile.vue', 1, 1, '我的患者信息菜单');
 
 -- Button Permissions
 INSERT INTO sys_permission (permission_code, permission_name, resource_type, menu_type, parent_id, sort_order, visible, status, description) VALUES
@@ -396,6 +395,7 @@ WHERE permission_code IN (
     'system:diagnosis',
     'system:knowledge',
     'system:settings',
+    'system:patient-profile',
     -- AI问诊权限
     'diagnosis:ai',
     'diagnosis:record',

@@ -77,22 +77,85 @@
             <el-button type="primary" @click="handleUpdateProfile" :loading="updateLoading">保存</el-button>
           </template>
         </el-dialog>
+
+        <!-- 患者信息卡片（仅普通用户显示） -->
+        <el-card v-if="isPatient" style="margin-top: 20px;" v-loading="patientInfoLoading">
+          <template #header>
+            <div class="card-header">
+              <span>患者信息</span>
+              <el-button type="primary" size="small" @click="goToPatientProfile">管理患者信息</el-button>
+            </div>
+          </template>
+          
+          <div v-if="patientInfo">
+            <el-descriptions :column="2" border>
+              <el-descriptions-item label="患者编号">{{ patientInfo.patientNo || '暂无' }}</el-descriptions-item>
+              <el-descriptions-item label="姓名">{{ patientInfo.name || '暂无' }}</el-descriptions-item>
+              <el-descriptions-item label="性别">{{ patientInfo.gender === 1 ? '男' : patientInfo.gender === 0 ? '女' : '暂无' }}</el-descriptions-item>
+              <el-descriptions-item label="年龄">{{ patientInfo.age || '暂无' }}</el-descriptions-item>
+              <el-descriptions-item label="出生日期">{{ patientInfo.birthday || '暂无' }}</el-descriptions-item>
+              <el-descriptions-item label="手机号">{{ patientInfo.phone || '暂无' }}</el-descriptions-item>
+              <el-descriptions-item label="身份证号" :span="2">{{ patientInfo.idCard || '暂无' }}</el-descriptions-item>
+              <el-descriptions-item label="地址" :span="2">{{ patientInfo.address || '暂无' }}</el-descriptions-item>
+              <el-descriptions-item label="过敏史" :span="2">{{ patientInfo.allergyHistory || '无' }}</el-descriptions-item>
+              <el-descriptions-item label="既往病史" :span="2">{{ patientInfo.pastHistory || '无' }}</el-descriptions-item>
+              <el-descriptions-item label="家族病史" :span="2">{{ patientInfo.familyHistory || '无' }}</el-descriptions-item>
+              <el-descriptions-item label="备注" :span="2">{{ patientInfo.remark || '无' }}</el-descriptions-item>
+            </el-descriptions>
+          </div>
+          
+          <el-empty v-else description="暂无患者信息" />
+        </el-card>
       </el-col>
     </el-row>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 import { updateProfile } from '@/api/user'
+import { getMyPatientInfo } from '@/api/patient'
 import request from '@/utils/request'
 
+const router = useRouter()
 const userStore = useUserStore()
 const editDialogVisible = ref(false)
 const updateLoading = ref(false)
 const profileFormRef = ref(null)
+
+// 患者信息
+const patientInfo = ref(null)
+const patientInfoLoading = ref(false)
+
+// 判断是否是普通用户（患者）
+const isPatient = computed(() => {
+  return userStore.userInfo.role === 2
+})
+
+// 跳转到患者信息页面
+const goToPatientProfile = () => {
+  router.push('/patient-profile')
+}
+
+// 加载患者信息
+const loadPatientInfo = async () => {
+  if (!isPatient.value) return
+  
+  patientInfoLoading.value = true
+  try {
+    const res = await getMyPatientInfo()
+    if (res.code === 200 && res.data) {
+      patientInfo.value = res.data
+    }
+  } catch (error) {
+    console.error('加载患者信息失败:', error)
+  } finally {
+    patientInfoLoading.value = false
+  }
+}
 
 // 个人信息表单
 const profileForm = reactive({
@@ -218,6 +281,11 @@ const uploadAvatarForEdit = async (options) => {
     ElMessage.error(error.message || '头像上传失败')
   }
 }
+
+// 组件挂载时加载患者信息
+onMounted(() => {
+  loadPatientInfo()
+})
 </script>
 
 <style scoped>

@@ -1,6 +1,7 @@
 package com.medical.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.medical.common.Result;
@@ -100,6 +101,54 @@ public class PatientController {
         try {
             patientService.removeById(id);
             return Result.success("删除成功", null);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 获取当前登录用户的患者信息
+     * 用于患者查看和编辑自己的信息
+     */
+    @GetMapping("/my-info")
+    public Result<Patient> getMyInfo() {
+        try {
+            // 获取当前登录用户的ID
+            Long userId = StpUtil.getLoginIdAsLong();
+            Patient patient = patientService.getByUserId(userId);
+            if (patient == null) {
+                return Result.error("未找到您的患者信息，请联系管理员创建");
+            }
+            return Result.success(patient);
+        } catch (Exception e) {
+            return Result.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 更新当前登录用户的患者信息
+     * 用于患者编辑自己的信息
+     */
+    @PutMapping("/my-info")
+    public Result<Void> updateMyInfo(@RequestBody Patient patient) {
+        try {
+            // 获取当前登录用户的ID
+            Long userId = StpUtil.getLoginIdAsLong();
+            // 验证患者是否在编辑自己的信息
+            Patient existingPatient = patientService.getByUserId(userId);
+            if (existingPatient == null) {
+                return Result.error("未找到您的患者信息");
+            }
+            // 确保只能修改自己的信息
+            if (!existingPatient.getId().equals(patient.getId())) {
+                return Result.error("无权修改其他患者的信息");
+            }
+            // 更新信息，保留不可修改的字段
+            patient.setUserId(userId);
+            patient.setPatientNo(existingPatient.getPatientNo());
+            patient.setCreateBy(existingPatient.getCreateBy());
+            patientService.updateById(patient);
+            return Result.success("更新成功", null);
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }

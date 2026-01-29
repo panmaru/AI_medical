@@ -52,3 +52,24 @@ export const deletePatient = (id) => {
     method: 'delete'
   })
 }
+
+/**
+ * 获取当前用户的患者信息
+ */
+export const getMyPatientInfo = () => {
+  return request({
+    url: '/patient/my-info',
+    method: 'get'
+  })
+}
+
+/**
+ * 更新当前用户的患者信息
+ */
+export const updateMyPatientInfo = (data) => {
+  return request({
+    url: '/patient/my-info',
+    method: 'put',
+    data
+  })
+}

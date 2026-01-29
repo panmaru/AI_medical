@@ -1,6 +1,5 @@
 package com.medical.service;
 
-import com.medical.dto.AiDiagnosisDTO;
 import com.medical.entity.DiagnosisRecord;
 
 import java.util.Map;
@@ -11,14 +10,6 @@ import java.util.Map;
  * @author AI Medical Team
  */
 public interface SparkAiService {
-
-    /**
-     * AI诊断
-     *
-     * @param dto 诊断请求信息
-     * @return 诊断结果
-     */
-    Map<String, Object> aiDiagnosis(AiDiagnosisDTO dto);
 
     /**
      * AI对话问诊

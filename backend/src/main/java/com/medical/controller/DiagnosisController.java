@@ -4,7 +4,6 @@ import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.medical.common.Result;
-import com.medical.dto.AiDiagnosisDTO;
 import com.medical.entity.DiagnosisRecord;
 import com.medical.service.DiagnosisRecordService;
 import com.medical.service.SparkAiService;
@@ -25,20 +24,6 @@ public class DiagnosisController {
 
     private final SparkAiService sparkAiService;
     private final DiagnosisRecordService diagnosisRecordService;
-
-    /**
-     * AI智能诊断
-     */
-    @PostMapping("/ai")
-    @SaCheckPermission("diagnosis:ai")
-    public Result<Map<String, Object>> aiDiagnosis(@RequestBody AiDiagnosisDTO dto) {
-        try {
-            Map<String, Object> result = sparkAiService.aiDiagnosis(dto);
-            return Result.success("AI诊断完成", result);
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
-    }
 
     /**
      * AI对话问诊

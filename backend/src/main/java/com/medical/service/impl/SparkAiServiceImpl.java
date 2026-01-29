@@ -5,7 +5,6 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import com.medical.dto.AiDiagnosisDTO;
 import com.medical.entity.DiagnosisRecord;
 import com.medical.entity.Patient;
 import com.medical.mapper.DiagnosisRecordMapper;
@@ -43,50 +42,6 @@ public class SparkAiServiceImpl implements SparkAiService {
     private final PatientMapper patientMapper;
 
     @Override
-    public Map<String, Object> aiDiagnosis(AiDiagnosisDTO dto) {
-        try {
-            // 查询患者信息
-            Patient patient = patientMapper.selectById(dto.getPatientId());
-            if (patient == null) {
-                throw new RuntimeException("患者不存在");
-            }
-
-            // 构建AI诊断提示词
-            String prompt = buildDiagnosisPrompt(patient, dto);
-
-            // 调用智谱AI API
-            String aiResponse = callZhipuApi(prompt);
-
-            // 解析AI响应
-            Map<String, Object> diagnosisResult = parseAiResponse(aiResponse);
-
-            // 保存诊断记录
-            DiagnosisRecord record = new DiagnosisRecord();
-            record.setRecordNo(generateRecordNo());
-            record.setPatientId(patient.getId());
-            record.setPatientName(patient.getName());
-            record.setChiefComplaint(dto.getChiefComplaint());
-            record.setPresentIllness(dto.getPresentIllness());
-            record.setSymptoms(JSONUtil.toJsonStr(dto.getSymptoms()));
-            record.setAiDiagnosis(JSONUtil.toJsonStr(diagnosisResult));
-            record.setAiSuggestion((String) diagnosisResult.get("suggestion"));
-            record.setDiagnosisType(0);
-            record.setStatus(0);
-
-            diagnosisRecordMapper.insert(record);
-
-            diagnosisResult.put("recordId", record.getId());
-            diagnosisResult.put("recordNo", record.getRecordNo());
-
-            return diagnosisResult;
-
-        } catch (Exception e) {
-            log.error("AI诊断失败", e);
-            throw new RuntimeException("AI诊断失败: " + e.getMessage());
-        }
-    }
-
-    @Override
     public String chat(String message, String sessionId) {
         try {
             // 构建对话提示词
@@ -105,49 +60,6 @@ public class SparkAiServiceImpl implements SparkAiService {
     public DiagnosisRecord saveDiagnosisRecord(DiagnosisRecord record) {
         diagnosisRecordMapper.insert(record);
         return record;
-    }
-
-    /**
-     * 构建诊断提示词
-     */
-    private String buildDiagnosisPrompt(Patient patient, AiDiagnosisDTO dto) {
-        StringBuilder prompt = new StringBuilder();
-        prompt.append("你是一位经验丰富的医生，请根据以下患者信息进行诊断分析：\n\n");
-
-        prompt.append("【患者基本信息】\n");
-        prompt.append("姓名：").append(patient.getName()).append("\n");
-        prompt.append("性别：").append(patient.getGender() == 1 ? "男" : "女").append("\n");
-        prompt.append("年龄：").append(patient.getAge()).append("岁\n\n");
-
-        prompt.append("【主诉】\n").append(dto.getChiefComplaint()).append("\n\n");
-
-        if (dto.getSymptoms() != null && !dto.getSymptoms().isEmpty()) {
-            prompt.append("【症状】\n");
-            dto.getSymptoms().forEach(symptom -> prompt.append("- ").append(symptom).append("\n"));
-            prompt.append("\n");
-        }
-
-        if (StringUtils.hasText(dto.getPresentIllness())) {
-            prompt.append("【现病史】\n").append(dto.getPresentIllness()).append("\n\n");
-        }
-
-        if (StringUtils.hasText(patient.getAllergyHistory())) {
-            prompt.append("【过敏史】\n").append(patient.getAllergyHistory()).append("\n\n");
-        }
-
-        if (StringUtils.hasText(patient.getPastHistory())) {
-            prompt.append("【既往病史】\n").append(patient.getPastHistory()).append("\n\n");
-        }
-
-        prompt.append("请提供：\n");
-        prompt.append("1. 可能的疾病诊断（按概率排序）\n");
-        prompt.append("2. 诊断依据\n");
-        prompt.append("3. 建议的检查项目\n");
-        prompt.append("4. 治疗建议\n");
-        prompt.append("5. 注意事项\n");
-        prompt.append("6. 是否需要就医（是/否，如果需要，说明紧急程度）\n\n");
-
-        return prompt.toString();
     }
 
     /**
@@ -238,36 +150,6 @@ public class SparkAiServiceImpl implements SparkAiService {
         } catch (Exception e) {
             log.error("解析智谱AI响应失败", e);
             throw new RuntimeException("响应解析失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 解析AI响应
-     */
-    private Map<String, Object> parseAiResponse(String aiResponse) {
-        try {
-            // 尝试解析为JSON
-            if (aiResponse.startsWith("{")) {
-                Map<String, Object> json = JSONUtil.parseObj(aiResponse);
-                return json;
-            }
-
-            // 如果不是JSON，包装成文本格式
-            Map<String, Object> result = new HashMap<>();
-            result.put("suggestion", aiResponse);
-            result.put("diagnosis", new ArrayList<>());
-            result.put("needDoctor", true);
-            result.put("urgency", "一般");
-            return result;
-
-        } catch (Exception e) {
-            // 解析失败，返回文本格式
-            Map<String, Object> result = new HashMap<>();
-            result.put("suggestion", aiResponse);
-            result.put("diagnosis", new ArrayList<>());
-            result.put("needDoctor", true);
-            result.put("urgency", "一般");
-            return result;
         }
     }
 

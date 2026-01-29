@@ -1,17 +1,6 @@
 import request from '@/utils/request'
 
 /**
- * AI智能诊断
- */
-export const aiDiagnosis = (data) => {
-  return request({
-    url: '/diagnosis/ai',
-    method: 'post',
-    data
-  })
-}
-
-/**
  * AI对话问诊
  */
 export const aiChat = (data) => {
